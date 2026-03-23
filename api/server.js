@@ -16,10 +16,21 @@ const db = new sqlite3.Database("./expenses.db", (err) => {
   }
 });
 
+//Gets rows from SQLite and returns the array of expense objects to client as JSON
+app.get("/api", (req, res) => {
+  db.all("SELECT * FROM expenses", [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
 
+//Create table
 db.run(`
   CREATE TABLE IF NOT EXISTS expenses (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
