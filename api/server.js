@@ -19,3 +19,13 @@ const db = new sqlite3.Database("./expenses.db", (err) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS expenses (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    title    TEXT,
+    amount   REAL,
+    date     TEXT,
+    category TEXT,
+    note     TEXT
+  )`);
