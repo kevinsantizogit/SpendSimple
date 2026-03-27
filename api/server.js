@@ -26,6 +26,26 @@ app.get("/api", (req, res) => {
   });
 });
 
+//Gets data from req.body, SQL uses ?? as placeholders while the actual values are passed 
+//Into the array
+//SQlite safely binds and this.lastID gives me the new record ID
+app.post("/api", (req, res) => {
+  const { title, amount, date, category, note } = req.body;
+
+  db.run(
+    `INSERT INTO expenses (title, amount, date, category, note)
+     VALUES (?, ?, ?, ?, ?)`,
+    [title, amount, date, category, note],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({ status: `New record created with id=${this.lastID}` });
+    }
+  );
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
