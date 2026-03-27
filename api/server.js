@@ -100,6 +100,19 @@ app.delete("/api/:id", (req, res) => {
   });
 });
 
+//DELETE is sent to /api without a target
+//SQL Delete is run with no WHERE clause to wipe the entire table
+//Confirmation is returned 
+app.delete("/api", (req, res) => {
+  db.run("DELETE FROM expenses", [], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json({ status: "Collection deleted" });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
