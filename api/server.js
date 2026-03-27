@@ -113,6 +113,35 @@ app.delete("/api", (req, res) => {
   });
 });
 
+//Put is used to receive an array of expense objects in the req.body
+//DELETE wipes the entire table
+//Statement looped through the array and reinserted one by one
+//replacing an entire collection in one go
+app.put("/api", (req, res) => {
+  const items = req.body;
+
+  db.serialize(() => {
+    db.run("DELETE FROM expenses");
+
+    const stmt = db.prepare(
+      `INSERT INTO expenses (title, amount, date, category, note)
+       VALUES (?, ?, ?, ?, ?)`
+    );
+
+    items.forEach((item) => {
+      stmt.run(item.title, item.amount, item.date, item.category, item.note);
+    });
+
+    stmt.finalize((err) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({ status: "Collection replaced" });
+    });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
