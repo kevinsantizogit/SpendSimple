@@ -64,6 +64,27 @@ app.get("/api/:id", (req, res) => {
   });
 });
 
+//User here sends a PUT request with updated expense data
+//Then the route finds record by ID and overwrites the DB with the fields
+app.put("/api/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const { title, amount, date, category, note } = req.body;
+
+  db.run(
+    `UPDATE expenses
+     SET title = ?, amount = ?, date = ?, category = ?, note = ?
+     WHERE id = ?`,
+    [title, amount, date, category, note, id],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({ status: `Record id=${id} updated` });
+    }
+  );
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
