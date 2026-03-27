@@ -45,6 +45,24 @@ app.post("/api", (req, res) => {
     }
   );
 });
+//GET /api, gets route parameter from req.params.id and then it converts it to a number
+//Queries one record with db.get and returns one object
+//or else expense not found is returned
+app.get("/api/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  db.get("SELECT * FROM expenses WHERE id = ?", [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+
+    res.json(row);
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
