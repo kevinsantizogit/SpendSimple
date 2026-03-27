@@ -85,6 +85,21 @@ app.put("/api/:id", (req, res) => {
   );
 });
 
+//Delete request with ID in URL
+//route pulls the ID from req.params.id and then a SQL DELETE is ran to targe the specified record
+//Confirmation or error is returned
+app.delete("/api/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  db.run("DELETE FROM expenses WHERE id = ?", [id], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json({ status: `Record id=${id} deleted` });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/api`);
 });
