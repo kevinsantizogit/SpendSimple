@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 
-//Define each expense object coming back from API
+// Define each expense object coming back from API
 type Expense = {
   id: number;
   title: string;
@@ -21,7 +21,7 @@ type Expense = {
 
 export default function Index() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  //Controller input driven by state, onChangeText calls rerender the input
+  // Controlled inputs driven by state, onChangeText triggers re-render
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
@@ -43,43 +43,91 @@ export default function Index() {
   };
 
   const addExpense = async () => {
+    // Validation — check required fields before anything hits the server
+    // trim() strips whitespace so a blank space doesn't count as valid input
+    if (!title.trim() || !amount.trim() || !date.trim() || !category.trim()) {
+      Alert.alert("Missing fields", "Please fill in title, amount, date, and category.");
+      return; // exits early, nothing gets sent
+    }
 
-  //Validation check the required fields before anything hits the server
-  //trim() strips whitespace so a blank space doesn't count as valid input
-  if (!title.trim() || !amount.trim() || !date.trim() || !category.trim()) {
-    Alert.alert("Missing fields", "Please fill in title, amount, date, and category.");
-    return; // exits early, nothing gets sent
-  }
+    try {
+      // POST request to the API with the form data as JSON in the body
+      const res = await fetch("http://localhost:3000/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, // tells server to expect JSON
+        body: JSON.stringify({
+          title: title.trim(),
+          amount: Number(amount), // TextInput always returns a string, convert to number
+          date: date.trim(),
+          category: category.trim(),
+          note: note.trim(),
+        }),
+      });
 
-  try {
-    // POST request to the API with the form data as JSON in the body
-    const res = await fetch("http://localhost:3000/api", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }, // tells server to expect JSON
-      body: JSON.stringify({
-        title: title.trim(),
-        amount: Number(amount), // TextInput always returns a string, convert to number
-        date: date.trim(),
-        category: category.trim(),
-        note: note.trim(),
-      }),
-    });
+      const data = await res.json();
+      console.log(data);
 
-    const data = await res.json();
-    console.log(data);
+      // Clear all form fields after a successful submission
+      setTitle(""); setAmount(""); setDate(""); setCategory(""); setNote("");
 
-    // clear all form fields after a successful submission
-    setTitle(""); setAmount(""); setDate(""); setCategory(""); setNote("");
+      // Re-fetch the list so the new expense appears immediately
+      await fetchExpenses();
 
-    // re-fetch the list so the new expense appears immediately
-    await fetchExpenses();
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", "Error, couldn't add expense.");
+    }
+  };
 
-  } catch (err) {
-    console.log(err);
-    Alert.alert("Error", "Error, couldn't add expense.");
-  }
-};
+  return (
+    <View style={styles.container}>
+      <Text style={styles.heading}>SpendSimple+</Text>
+      <Text style={styles.subheading}>Track your expenses</Text>
 
+      {/* Form card — all inputs and the submit button */}
+      <View style={styles.formCard}>
+        <Text style={styles.sectionTitle}>Add Expense</Text>
+
+        {/* Each TextInput is a controlled component — value bound to state, onChangeText updates it */}
+        <TextInput style={styles.input} placeholder="Title" value={title} onChangeText={setTitle} />
+        <TextInput style={styles.input} placeholder="Amount" value={amount} onChangeText={setAmount}
+          keyboardType="numeric"
+        />
+        <TextInput style={styles.input} placeholder="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
+        <TextInput style={styles.input} placeholder="Category" value={category} onChangeText={setCategory} />
+        <TextInput style={styles.input} placeholder="Note" value={note} onChangeText={setNote} />
+
+        {/* Pressable is the recommended button component in React Native — onPress calls addExpense */}
+        <Pressable style={styles.addButton} onPress={addExpense}>
+          <Text style={styles.addButtonText}>Add Expense</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.sectionTitle}>All Expenses</Text>
+
+      {/* FlatList — only renders what's visible on screen for performance */}
+      <FlatList
+        data={expenses}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<Text>No expenses yet.</Text>}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text>Amount: ${item.amount}</Text>
+            <Text>Date: {item.date}</Text>
+            <Text>Category: {item.category}</Text>
+            {/* fallback if note is empty */}
+            <Text>Note: {item.note || "None"}</Text>
+          </View>
+        )}
+      />
+    </View>
+  );
+
+} // component closes here
+
+// styles outside the component — StyleSheet.create optimizes at load time
+// better performance than inline styles which create a new object on every render
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -138,50 +186,3 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 });
-
-
-return (
-  <View style={styles.container}>
-    <Text style={styles.heading}>SpendSimple+</Text>
-    <Text style={styles.subheading}>Track your expenses</Text>
-
-    {/* Form card — all inputs and the submit button */}
-    <View style={styles.formCard}>
-      <Text style={styles.sectionTitle}>Add Expense</Text>
-
-      {/* Each TextInput is a controlled component — value bound to state, onChangeText updates it */}
-      <TextInput style={styles.input} placeholder="Title" value={title} onChangeText={setTitle} />
-      <TextInput style={styles.input} placeholder="Amount" value={amount} onChangeText={setAmount}
-        keyboardType="numeric" // pulls up number keyboard on mobile
-      />
-      <TextInput style={styles.input} placeholder="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
-      <TextInput style={styles.input} placeholder="Category" value={category} onChangeText={setCategory} />
-      <TextInput style={styles.input} placeholder="Note" value={note} onChangeText={setNote} />
-
-      {/* Pressable is the recommended button component in React Native — onPress calls addExpense */}
-      <Pressable style={styles.addButton} onPress={addExpense}>
-        <Text style={styles.addButtonText}>Add Expense</Text>
-      </Pressable>
-    </View>
-
-    <Text style={styles.sectionTitle}>All Expenses</Text>
-
-    {/* FlatList renders what's visible on screen */}
-    <FlatList
-      data={expenses}                                          // array from state
-      keyExtractor={(item) => item.id.toString()}             // unique key per item using DB id
-      ListEmptyComponent={<Text>No expenses yet.</Text>}      // shown when array is empty
-      renderItem={({ item }) => (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text>Amount: ${item.amount}</Text>
-          <Text>Date: {item.date}</Text>
-          <Text>Category: {item.category}</Text>
-          <Text>Note: {item.note || "None"}</Text>            {/* fallback if note is empty */}
-        </View>
-      )}
-    />
-  </View>
-);
-
-}
