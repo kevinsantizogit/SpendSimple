@@ -43,7 +43,7 @@ export default function Index() {
   };
 
   const addExpense = async () => {
-    // Validation — check required fields before anything hits the server
+    // Validation used to check required fields before anything hits the server
     // trim() strips whitespace so a blank space doesn't count as valid input
     if (!title.trim() || !amount.trim() || !date.trim() || !category.trim()) {
       Alert.alert("Missing fields", "Please fill in title, amount, date, and category.");
@@ -67,10 +67,10 @@ export default function Index() {
       const data = await res.json();
       console.log(data);
 
-      // Clear all form fields after a successful submission
+      // clear all form fields after a successful submission
       setTitle(""); setAmount(""); setDate(""); setCategory(""); setNote("");
 
-      // Re-fetch the list so the new expense appears immediately
+      // refetch the list so the new expense appears immediately
       await fetchExpenses();
 
     } catch (err) {
@@ -79,6 +79,45 @@ export default function Index() {
     }
   };
 
+  // DELETE single expense by ID — sends DELETE to /api/:id
+  const deleteExpense = async (id: number) => {
+    try {
+      await fetch(`http://localhost:3000/api/${id}`, {
+        method: "DELETE",
+      });
+      await fetchExpenses(); // refresh list after deletion
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", "Couldn't delete expense.");
+    }
+  };
+
+  // DELETE all expenses which sends DELETE to /api with no ID, wipes the whole table
+  const clearAllExpenses = async () => {
+    try {
+      await fetch("http://localhost:3000/api", {
+        method: "DELETE",
+      });
+      await fetchExpenses();
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", "Couldn't clear expenses.");
+    }
+  };
+  const confirmDelete = (id: number) => {
+    Alert.alert("Delete expense", "Are you sure you want to delete this expense?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => deleteExpense(id) },
+    ]);
+  };
+
+  const confirmClearAll = () => {
+    Alert.alert("Clear all expenses", "Are you sure you want to delete all expenses?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Clear All", style: "destructive", onPress: clearAllExpenses },
+    ]);
+  };
+  
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>SpendSimple+</Text>
@@ -101,6 +140,9 @@ export default function Index() {
         <Pressable style={styles.addButton} onPress={addExpense}>
           <Text style={styles.addButtonText}>Add Expense</Text>
         </Pressable>
+        <Pressable style={styles.clearButton} onPress={confirmClearAll}>
+          <Text style={styles.buttonText}>Clear All Expenses</Text>
+        </Pressable>
       </View>
 
       <Text style={styles.sectionTitle}>All Expenses</Text>
@@ -116,18 +158,24 @@ export default function Index() {
             <Text>Amount: ${item.amount}</Text>
             <Text>Date: {item.date}</Text>
             <Text>Category: {item.category}</Text>
-            {/* fallback if note is empty */}
             <Text>Note: {item.note || "None"}</Text>
+
+            <View style={styles.cardActions}>
+              <Pressable
+                style={styles.deleteButton}
+                onPress={() => confirmDelete(item.id)}
+              >
+                <Text style={styles.buttonText}>Delete</Text>
+              </Pressable>
+            </View>
           </View>
         )}
       />
     </View>
   );
+}
 
-} // component closes here
-
-// styles outside the component — StyleSheet.create optimizes at load time
-// better performance than inline styles which create a new object on every render
+// styles outside the component StyleSheet.create optimizes at load time
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -184,5 +232,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 6,
+  },
+  clearButton: {
+    backgroundColor: "#7a1f1f",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  deleteButton: {
+    backgroundColor: "#7a1f1f",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  cardActions: {
+    marginTop: 8,
   },
 });
