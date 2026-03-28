@@ -140,7 +140,7 @@ export default function Index() {
         <Pressable style={styles.addButton} onPress={addExpense}>
           <Text style={styles.addButtonText}>Add Expense</Text>
         </Pressable>
-        <Pressable style={styles.clearButton} onPress={confirmClearAll}>
+        <Pressable style={styles.clearButton} onPress={clearAllExpenses}>
           <Text style={styles.buttonText}>Clear All Expenses</Text>
         </Pressable>
       </View>
@@ -163,7 +163,7 @@ export default function Index() {
             <View style={styles.cardActions}>
               <Pressable
                 style={styles.deleteButton}
-                onPress={() => confirmDelete(item.id)}
+                onPress={() => deleteExpense(item.id)}
               >
                 <Text style={styles.buttonText}>Delete</Text>
               </Pressable>
